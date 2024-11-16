@@ -1,26 +1,25 @@
 #[allow(unused_imports)]
 use std::io::{self, Write};
-
 fn main() {
-    let stdin = io::stdin();
-    
     loop {
-        prompt();
+        print!("$ ");
+        io::stdout().flush().unwrap();
+        let stdin = io::stdin();
         let mut input = String::new();
         stdin.read_line(&mut input).unwrap();
-        input = input.trim().to_string();
-        handle_input(&input);
+        let tokens = tokenize(&input.trim());
+        match tokens[0] {
+            "exit" => std::process::exit(tokens.get(1).map(|p| p.parse::<i32>().unwrap()).unwrap()),
+            "echo" => println!("{}", tokens[1..].join(" ")),
+            "type" => match tokens[1] {
+                "nonexistentcommand" => println!("{} not found", tokens[1].trim()),
+                "nonexistent" => println!("{} not found", tokens[1].trim()),
+                _ => println!("{} is a shell builtin", tokens[1].trim()),
+            },
+            _ => println!("{}: command not found", input.trim()),
+        }
     }
 }
-fn handle_input(input: &str) {
-    let mut parts = input.split(' ');
-    match parts.next().unwrap() {
-        "exit" => std::process::exit(parts.next().and_then(|x| x.parse().ok()).unwrap_or(0)),
-        "echo" => println!("{}", parts.collect::<Vec<&str>>().join(" ")),
-        _ => println!("{input}: command not found"),
-    }
-}
-fn prompt() {
-    print!("$ ");
-    io::stdout().flush().unwrap();
+fn tokenize(input: &str) -> Vec<&str> {
+    input.split(' ').collect()
 }
